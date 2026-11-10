@@ -320,6 +320,35 @@ func TestPasteNotDuplicated(t *testing.T) {
 	}
 }
 
+func TestInputBlurredUsesTheme(t *testing.T) {
+	theme := ThemeFunc(func(isDark bool) *Styles {
+		s := ThemeCharm(isDark)
+		s.Blurred.TextInput.Prompt = lipgloss.NewStyle().Foreground(lipgloss.Color("#123456"))
+		s.Blurred.TextInput.Text = lipgloss.NewStyle().Foreground(lipgloss.Color("#654321"))
+		s.Blurred.TextInput.Placeholder = lipgloss.NewStyle().Foreground(lipgloss.Color("#abcdef"))
+		return s
+	})
+
+	value := "hello"
+	for name, tc := range map[string]struct {
+		field *Input
+		want  string
+	}{
+		"prompt":      {NewInput().Prompt("> "), "38;2;18;52;86m"},
+		"text":        {NewInput().Value(&value), "38;2;101;67;33m"},
+		"placeholder": {NewInput().Placeholder("hello"), "38;2;171;205;239m"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			// The field is never focused, so it renders with the blurred styles.
+			tc.field.WithTheme(theme)
+			view := tc.field.View()
+			if !strings.Contains(view, tc.want) {
+				t.Errorf("expected the blurred input to use the theme's blurred %s colour (%q), got %q", name, tc.want, view)
+			}
+		})
+	}
+}
+
 func TestInlineInput(t *testing.T) {
 	field := NewInput().
 		Title("Input ").

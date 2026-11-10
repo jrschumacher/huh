@@ -384,11 +384,17 @@ func (i *Input) View() string {
 	// NB: since the method is on a pointer receiver these are being mutated.
 	// Because this runs on every render this shouldn't matter in practice,
 	// however.
+	//
+	// styles already holds the focused or blurred field styles, so apply them
+	// to both states: a blurred textinput draws with its Blurred styles.
 	st := i.textinput.Styles()
 	st.Cursor.Color = styles.TextInput.Cursor.GetForeground()
 	st.Focused.Prompt = styles.TextInput.Prompt
 	st.Focused.Text = styles.TextInput.Text
 	st.Focused.Placeholder = styles.TextInput.Placeholder
+	st.Blurred.Prompt = styles.TextInput.Prompt
+	st.Blurred.Text = styles.TextInput.Text
+	st.Blurred.Placeholder = styles.TextInput.Placeholder
 	i.textinput.SetStyles(st)
 
 	// Adjust text input size to its char limit if it fit in its width
