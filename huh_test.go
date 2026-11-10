@@ -320,6 +320,41 @@ func TestPasteNotDuplicated(t *testing.T) {
 	}
 }
 
+func TestGroupErrorFitsHeight(t *testing.T) {
+	const height = 13
+	for _, showHelp := range []bool{true, false} {
+		t.Run(fmt.Sprintf("help=%t", showHelp), func(t *testing.T) {
+			f := NewForm(
+				NewGroup(
+					NewInput().
+						Title("Name").
+						Validate(func(s string) error {
+							if s == "" {
+								return errors.New("name is required")
+							}
+							return nil
+						}),
+				),
+			).WithShowHelp(showHelp).WithWidth(40).WithHeight(height)
+			f.Update(f.Init())
+
+			// Submit the empty input so that validation fails.
+			f = batchUpdate(f.Update(codeKeypress(tea.KeyEnter))).(*Form)
+
+			view := f.View()
+			if !strings.Contains(ansi.Strip(view), "name is required") {
+				t.Fatalf("expected the view to contain the error, got:\n%s", ansi.Strip(view))
+			}
+			if !strings.Contains(ansi.Strip(view), "Name") {
+				t.Errorf("expected the view to contain the field, got:\n%s", ansi.Strip(view))
+			}
+			if got := lipgloss.Height(view); got > height {
+				t.Errorf("expected the view to be at most %d rows, got %d:\n%s", height, got, ansi.Strip(view))
+			}
+		})
+	}
+}
+
 func TestInlineInput(t *testing.T) {
 	field := NewInput().
 		Title("Input ").
@@ -561,7 +596,7 @@ func TestSelectDynamic(t *testing.T) {
 		}, &trigger)
 	field1.WithHeight(5)
 	field2.WithHeight(5)
-	f := NewForm(NewGroup(field1, field2)).WithHeight(10)
+	f := NewForm(NewGroup(field1, field2)).WithHeight(11)
 
 	doAllUpdates(f, f.Init())
 
@@ -799,7 +834,7 @@ func TestSelectPageNavigation(t *testing.T) {
 		"select":      NewSelect[string]().Options(opts...).Title("Choose"),
 	} {
 		t.Run(name, func(t *testing.T) {
-			f := NewForm(NewGroup(field)).WithHeight(10)
+			f := NewForm(NewGroup(field)).WithHeight(11)
 			f.Update(f.Init())
 
 			view := viewModel(f)

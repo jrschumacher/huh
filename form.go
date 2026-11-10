@@ -652,7 +652,13 @@ func (f *Form) Update(msg tea.Msg) (Model, tea.Cmd) {
 	}
 
 	m, cmd := group.Update(msg)
-	f.selector.Set(f.selector.Index(), m.(*Group))
+	group = m.(*Group)
+	if f.height > 0 {
+		// Errors and help change the footer's height, keep the group
+		// within the height it was given.
+		group.fitHeight()
+	}
+	f.selector.Set(f.selector.Index(), group)
 
 	// A user input a key, this could hide or show other groups,
 	// let's update all of their positions.

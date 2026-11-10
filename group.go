@@ -368,9 +368,21 @@ func (g *Group) titleFooterHeight() int {
 		h += lipgloss.Height(s)
 	}
 	if s := g.Footer(); s != "" {
-		h += lipgloss.Height(s)
+		// View puts an empty line between the content and the footer.
+		h += 1 + lipgloss.Height(s)
 	}
 	return h
+}
+
+// fitHeight shrinks or grows the viewport to keep the group within its
+// height when the header or footer changed height since WithHeight, e.g.
+// when a validation error replaces the help.
+func (g *Group) fitHeight() {
+	if g.height <= 0 || g.viewport.Height() == g.height-g.titleFooterHeight() {
+		return
+	}
+	g.WithHeight(g.height)
+	g.buildView()
 }
 
 // rawHeight returns the full height of the group, without using a viewport.
